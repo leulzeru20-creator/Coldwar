@@ -1,605 +1,696 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global News Live - Cold War Broadcast</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Segoe UI', Impact, Arial, sans-serif;
-      background-color: #030712;
-      color: #ffffff;
-    }
-    
-    /* Background Layer */
-    .studio-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 30% 40%, #0f172a 0%, #030712 85%);
-      z-index: 1;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNN - Global News Network | Cold War Live Broadcast</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050b14;
+            color: #ffffff;
+            overflow: hidden;
+            user-select: none;
+        }
 
-    /* Fullscreen Realistic Globe Canvas */
-    #globeCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 2;
-      opacity: 0.18; /* Subtle background opacity so it doesn't interfere with presenter */
-      pointer-events: none;
-    }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
 
-    /* Grid Overlay */
-    .grid-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: 
-        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      z-index: 3;
-      pointer-events: none;
-    }
+        /* Ticker Animation */
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 35s linear infinite;
+        }
 
-    /* Studio Views */
-    .view-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 4;
-      display: none;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 30px;
-    }
-    .view-container.active {
-      display: flex;
-    }
+        /* Radar Scanner Animation */
+        @keyframes radar-sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .radar-sweep {
+            animation: radar-sweep 4s linear infinite;
+            transform-origin: center;
+        }
 
-    /* Header Bar */
-    .news-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 12px 24px;
-      border-radius: 8px;
-      backdrop-filter: blur(8px);
-      width: fit-content;
-      gap: 20px;
-    }
-    .channel-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #38bdf8;
-      text-transform: uppercase;
-    }
-    .live-tag {
-      background-color: #ef4444;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .location-tag {
-      font-size: 14px;
-      color: #94a3b8;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
+        /* Snow effect animation */
+        @keyframes snow {
+            0% { transform: translateY(-10px) translateX(0); }
+            50% { transform: translateY(50vh) translateX(20px); }
+            100% { transform: translateY(105vh) translateX(-10px); }
+        }
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: white;
+            opacity: 0.7;
+            animation: snow linear infinite;
+        }
 
-    /* Lower Third Banners */
-    .lower-third {
-      width: 60%;
-      background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
-      border-left: 6px solid #0284c7;
-      border-top: 1px solid rgba(56, 189, 248, 0.4);
-      border-right: 1px solid rgba(56, 189, 248, 0.4);
-      border-bottom: 1px solid rgba(56, 189, 248, 0.4);
-      padding: 16px 24px;
-      border-radius: 0 12px 12px 0;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-    }
-    .banner-title {
-      font-size: 24px;
-      font-weight: 900;
-      color: #f8fafc;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .banner-subtitle {
-      font-size: 15px;
-      color: #38bdf8;
-      font-weight: 600;
-    }
+        /* Flashing Alert Animation */
+        @keyframes alert-flash {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.45); }
+            50% { background-color: rgba(220, 38, 38, 0.05); }
+        }
+        .animate-alert-flash {
+            animation: alert-flash 0.8s infinite;
+        }
 
-    /* View 2: Field Radar HUD overlay */
-    .field-hud {
-      position: absolute;
-      top: 50%;
-      left: 20%;
-      transform: translate(-50%, -50%);
-      width: 320px;
-      height: 320px;
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 50%;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .field-hud::before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border: 2px dashed rgba(239, 68, 68, 0.3);
-      border-radius: 50%;
-      animation: spinRadar 10s linear infinite;
-    }
-    @keyframes spinRadar {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+        /* Scanlines TV effect */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
 
-    /* View 3: Historian Infographic Slide */
-    .historian-card {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 550px;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(12px);
-    }
-    .historian-card h2 {
-      font-size: 24px;
-      color: #38bdf8;
-      margin-bottom: 16px;
-      border-bottom: 2px solid #0284c7;
-      padding-bottom: 8px;
-    }
-    .historian-card ul {
-      list-style: none;
-    }
-    .historian-card li {
-      font-size: 16px;
-      margin-bottom: 12px;
-      line-height: 1.4;
-      color: #e2e8f0;
-    }
-    .historian-card strong {
-      color: #f35656;
-    }
-
-    /* Countdown Widget Overlay */
-    .countdown-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      background: rgba(3, 7, 18, 0.95);
-      border: 3px solid #ef4444;
-      border-radius: 20px;
-      padding: 40px 60px;
-      text-align: center;
-      display: none;
-      box-shadow: 0 0 50px rgba(239, 68, 68, 0.5);
-    }
-    .countdown-overlay.active {
-      display: block;
-      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    @keyframes popIn {
-      from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
-      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-    .countdown-num {
-      font-size: 100px;
-      font-weight: 900;
-      color: #ef4444;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-    .countdown-sub {
-      font-size: 20px;
-      letter-spacing: 2px;
-      color: #94a3b8;
-      text-transform: uppercase;
-    }
-
-    /* Breaking Red Alert Overlay */
-    .alert-flash {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(239, 68, 68, 0.25);
-      z-index: 9;
-      pointer-events: none;
-      display: none;
-    }
-    .alert-flash.active {
-      display: block;
-      animation: alertPulse 0.5s infinite alternate;
-    }
-    @keyframes alertPulse {
-      from { opacity: 0.2; }
-      to { opacity: 0.8; }
-    }
-
-    /* Control Panel Dock */
-    .control-dock {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      z-index: 20;
-      display: flex;
-      gap: 10px;
-      background: rgba(15, 23, 42, 0.85);
-      padding: 8px 14px;
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(8px);
-    }
-    .btn {
-      background: #1e293b;
-      color: #f8fafc;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 700;
-      transition: all 0.2s ease;
-    }
-    .btn:hover {
-      background: #38bdf8;
-      color: #0f172a;
-    }
-    .btn.active {
-      background: #0284c7;
-      color: #ffffff;
-      border-color: #38bdf8;
-    }
-  </style>
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
 </head>
-<body>
+<body class="h-screen w-screen flex flex-col justify-between relative select-none">
 
-  <!-- Studio Background -->
-  <div class="studio-bg"></div>
+    <!-- TV Scanline Overlay Effect -->
+    <div class="scanlines absolute inset-0 z-40 pointer-events-none"></div>
 
-  <!-- Fullscreen 3D Realistic Globe Canvas -->
-  <canvas id="globeCanvas"></canvas>
-
-  <!-- Grid Pattern Overlay -->
-  <div class="grid-overlay"></div>
-
-  <!-- Red Breaking Alert Flash -->
-  <div id="alertFlash" class="alert-flash"></div>
-
-  <!-- View 1: Studio Anchor -->
-  <div id="view1" class="view-container active">
-    <div class="news-header">
-      <div class="channel-logo">🌐 GLOBAL NEWS LIVE</div>
-      <div class="live-tag">LIVE</div>
-      <div class="location-tag">STUDIO HEADQUARTERS</div>
+    <!-- FLASHING EMERGENCY RED OVERLAY -->
+    <div id="alertOverlay" class="absolute inset-0 z-50 pointer-events-none hidden flex flex-col items-center justify-center">
+        <div class="bg-red-600/90 text-white font-orbitron text-4xl md:text-7xl font-black px-10 py-6 rounded-2xl shadow-2xl tracking-widest animate-bounce border-4 border-white text-center">
+            🚨 BREAKING ALERT 🚨
+        </div>
+        <div class="mt-4 bg-slate-950/80 px-6 py-2 rounded-lg text-white font-mono text-sm border border-red-500">
+            PRESS 'R' TO CLOSE ALERT
+        </div>
     </div>
-    <div class="lower-third">
-      <div class="banner-title">BREAKING NEWS: THE COLD WAR ESCALATES</div>
-      <div class="banner-subtitle">Tensions High Between USA & USSR • Global Showdown Expected</div>
-    </div>
-  </div>
 
-  <!-- View 2: Field Reporter -->
-  <div id="view2" class="view-container">
-    <div class="news-header">
-      <div class="channel-logo">🌐 GLOBAL NEWS LIVE</div>
-      <div class="live-tag">LIVE</div>
-      <div class="location-tag">LOCATION: BATTLEFIELD SECTOR</div>
-    </div>
-    <div class="field-hud"></div>
-    <div class="lower-third">
-      <div class="banner-title">ON THE FRONTLINES: AWAITING EXPLOSION</div>
-      <div class="banner-subtitle">Senior Correspondent Live On Location • Standby For Impact</div>
-    </div>
-  </div>
+    <!-- TOP BROADCAST BAR -->
+    <header class="z-30 flex justify-between items-center bg-slate-950/90 border-b border-slate-800 px-4 py-2 text-sm md:text-base">
+        <!-- Logo & LIVE Badge -->
+        <div class="flex items-center space-x-3">
+            <div class="flex items-center bg-red-700 text-white font-orbitron font-black px-3 py-1 rounded text-lg tracking-wider">
+                <span class="w-3 h-3 bg-white rounded-full mr-2 animate-ping"></span>
+                GNN
+            </div>
+            <span class="text-xs md:text-sm font-semibold tracking-widest text-slate-300 hidden sm:inline">GLOBAL NEWS NETWORK</span>
+            <div class="bg-red-600 text-white font-bold text-xs px-2 py-0.5 rounded tracking-widest uppercase animate-pulse">
+                LIVE
+            </div>
+        </div>
 
-  <!-- View 3: Historian Explanation -->
-  <div id="view3" class="view-container">
-    <div class="news-header">
-      <div class="channel-logo">🌐 GLOBAL NEWS LIVE</div>
-      <div class="live-tag">ANALYSIS</div>
-      <div class="location-tag">HISTORICAL BRIEFING</div>
-    </div>
-    <div class="historian-card">
-      <h2>WHAT IS THE COLD WAR?</h2>
-      <ul>
-        <li>• <strong>No Direct War ("Cold"):</strong> Tensions without direct US vs. USSR military combat.</li>
-        <li>• <strong>Proxy Wars:</strong> Fought through conflicts in Korea, Vietnam, and Afghanistan.</li>
-        <li>• <strong>Ideological Rivalry:</strong> Western Capitalism vs. Eastern Communism.</li>
-        <li>• <strong>Nuclear Arms & Space Race:</strong> M.A.D. (Mutually Assured Destruction) deterrence.</li>
-      </ul>
-    </div>
-    <div class="lower-third">
-      <div class="banner-title">HISTORICAL FACT-CHECK: NOT A "HOT" WAR</div>
-      <div class="banner-subtitle">De-escalating Misconceptions • Geopolitical Rivalry Explained</div>
-    </div>
-  </div>
+        <!-- Center Broadcast Information -->
+        <div id="viewTitleHeader" class="font-orbitron font-bold text-sky-400 tracking-wider text-center hidden md:block">
+            STUDIO MAIN DESK • SPECIAL COVERAGE
+        </div>
 
-  <!-- Interactive Countdown Modal -->
-  <div id="countdownModal" class="countdown-overlay">
-    <div id="countNum" class="countdown-num">5</div>
-    <div id="countText" class="countdown-sub">COUNTDOWN TO BOMB...</div>
-  </div>
+        <!-- Right Side: Clock & Control Toggle -->
+        <div class="flex items-center space-x-4">
+            <div class="font-orbitron font-semibold text-slate-300 flex items-center">
+                <i class="fa-regular font-bold fa-clock mr-2 text-sky-400"></i>
+                <span id="liveClock">00:00:00 UTC</span>
+            </div>
+            <button id="fullscreenBtn" onclick="toggleFullscreen()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded text-xs transition border border-slate-700 flex items-center">
+                <i class="fa-solid fa-expand mr-1.5"></i> <span id="fsBtnText">Fullscreen</span>
+            </button>
+        </div>
+    </header>
 
-  <!-- On-Screen Controls -->
-  <div class="control-dock">
-    <button class="btn active" onclick="switchView(1)">1: Anchor Desk</button>
-    <button class="btn" onclick="switchView(2)">2: Field Reporter</button>
-    <button class="btn" onclick="switchView(3)">3: Historian Board</button>
-    <button class="btn" onclick="triggerCountdown()">C: Countdown (5s)</button>
-    <button class="btn" onclick="toggleAlert()">R: Red Alert</button>
-    <button class="btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
-  </div>
+    <!-- MAIN DISPLAY AREA (SWITCHABLE BACKGROUND VIEWS) -->
+    <main class="flex-1 relative z-10 overflow-hidden flex items-center justify-center">
 
-  <script>
-    /* -------------------------------------------------------------
-       1. REALISTIC FULLSCREEN 3D GLOBE RENDERER (Canvas 2D Engine)
-    ------------------------------------------------------------- */
-    const canvas = document.getElementById('globeCanvas');
-    const ctx = canvas.getContext('2d');
+        <!-- VIEW 1: STUDIO ANCHOR BACKDROP WITH TILTED LEFT-ALIGNED GLOBE CANVAS -->
+        <div id="viewStudio" class="absolute inset-0 flex flex-col justify-between transition-opacity duration-700 opacity-100">
+            <!-- Background Visual Grid & Canvas Layer -->
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center overflow-hidden">
+                
+                <!-- Canvas for Tilted, Left-Shifted 3D Globe -->
+                <canvas id="globeCanvas" class="w-full h-full absolute inset-0 opacity-85 pointer-events-none"></canvas>
 
-    let width, height, globeRadius;
-    let rotationAngle = 0;
-    const tiltAngle = 23.5 * (Math.PI / 180); // Earth's natural tilt
+                <!-- Hologram Rings surrounding the Globe (Anchored Left) -->
+                <div class="absolute left-[5%] md:left-[10%] top-1/2 -translate-y-1/2 w-[450px] h-[450px] md:w-[600px] md:h-[600px] rounded-full border border-sky-500/10 pointer-events-none"></div>
+                <div class="absolute left-[8%] md:left-[12%] top-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[480px] md:h-[480px] rounded-full border border-blue-400/15 pointer-events-none"></div>
+                
+                <!-- Left Accent Column -->
+                <div class="absolute left-6 top-1/4 bottom-1/4 w-8 bg-gradient-to-b from-sky-500/20 via-blue-500/5 to-transparent rounded-full blur-sm"></div>
 
-    function resizeCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      globeRadius = Math.min(width, height) * 0.45; // Covers full screen background
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+                <!-- RIGHT SIDE DESIGNATED ACTOR / PRESENTER SPACE INDICATOR (Invisible bound box + gentle watermark) -->
+                <div class="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center pointer-events-none opacity-20">
+                    <div class="border-2 border-dashed border-sky-400/30 rounded-3xl w-4/5 h-4/5 flex items-center justify-center text-sky-300 font-orbitron text-xs tracking-widest uppercase">
+                        [ PRESENTER SPACE ON STAGE ]
+                    </div>
+                </div>
+            </div>
 
-    // Procedural Simplified Continent Polygons (Lat, Lon points)
-    const continents = [
-      // North America
-      [[60,-120],[50,-100],[30,-100],[25,-80],[45,-70],[60,-80]],
-      // South America
-      [[10,-75],[-10,-75],[-35,-70],[-50,-75],[-20,-40],[0,-50]],
-      // Europe
-      [[65,10],[50,10],[40,30],[55,40],[65,30]],
-      // Africa
-      [[35,-10],[30,30],[10,40],[-30,30],[-30,15],[5,10],[15,-15]],
-      // Asia
-      [[70,60],[70,140],[40,120],[20,80],[30,60],[50,60]],
-      // Australia
-      [[-15,120],[-35,120],[-35,150],[-15,140]]
-    ];
+            <!-- Lower Third Banner Overlay for Anchor (Shifted Left to stay clear of the right presenter space) -->
+            <div class="absolute bottom-16 left-6 md:left-12 z-20 max-w-xl">
+                <div class="bg-blue-950/90 border-l-8 border-red-600 px-5 py-3 shadow-2xl rounded-r-lg glass-panel border border-sky-500/20">
+                    <div class="text-xs font-bold text-sky-300 font-orbitron tracking-widest uppercase flex items-center">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-ping"></span>
+                        GNN SPECIAL REPORT
+                    </div>
+                    <div class="text-xl md:text-3xl font-extrabold text-white tracking-wide">THE COLD WAR: GLOBAL TENSIONS</div>
+                    <div class="text-sm text-slate-300 mt-1">Superpower Rivalry: United States vs. Soviet Union (1947-1991)</div>
+                </div>
+            </div>
+        </div>
 
-    function project(lat, lon) {
-      const radLat = lat * (Math.PI / 180);
-      const radLon = (lon + rotationAngle) * (Math.PI / 180);
+        <!-- VIEW 2: FIELD REPORT (EXTREME FRONT LINE / SNOWY ZONE) -->
+        <div id="viewField" class="absolute inset-0 flex flex-col justify-between transition-opacity duration-700 opacity-0 pointer-events-none">
+            <!-- Arctic / Cold Battlefield Background -->
+            <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 overflow-hidden">
+                <!-- Snowfall Container -->
+                <div id="snowContainer" class="absolute inset-0 pointer-events-none"></div>
 
-      // 3D Sphere projection with Axial Tilt
-      let x = Math.cos(radLat) * Math.sin(radLon);
-      let y = Math.sin(radLat);
-      let z = Math.cos(radLat) * Math.cos(radLon);
+                <!-- Dark Snowy Mountain Silhouettes -->
+                <svg class="absolute bottom-0 w-full h-2/3 text-slate-950/80" fill="currentColor" viewBox="0 0 1200 400" preserveAspectRatio="none">
+                    <polygon points="0,400 0,200 150,280 300,150 500,300 700,100 900,260 1100,180 1200,250 1200,400"/>
+                    <polygon points="0,400 0,260 200,320 400,220 650,350 850,180 1050,300 1200,220 1200,400" fill="#030712" opacity="0.7"/>
+                </svg>
 
-      // Apply Tilt X-axis rotation
-      let ty = y * Math.cos(tiltAngle) - z * Math.sin(tiltAngle);
-      let tz = y * Math.sin(tiltAngle) + z * Math.cos(tiltAngle);
+                <!-- Weather Radar Target HUD Overlay -->
+                <div class="absolute top-10 right-10 w-44 h-44 rounded-full border-2 border-emerald-500/40 bg-emerald-950/20 glass-panel flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full border border-emerald-500/20"></div>
+                    <div class="w-full h-0.5 bg-emerald-500/30"></div>
+                    <div class="h-full w-0.5 bg-emerald-500/30"></div>
+                    <!-- Radar Sweep Line -->
+                    <div class="absolute top-0 left-0 w-full h-full radar-sweep">
+                        <div class="w-1/2 h-1/2 bg-gradient-to-br from-emerald-500/40 to-transparent rounded-tl-full origin-bottom-right"></div>
+                    </div>
+                    <span class="absolute bottom-2 text-[10px] font-orbitron text-emerald-400 font-bold">FRONT LINE RADAR</span>
+                </div>
 
-      return {
-        px: width / 2 + x * globeRadius,
-        py: height / 2 - ty * globeRadius,
-        visible: tz > 0
-      };
-    }
+                <!-- Location HUD Stamp -->
+                <div class="absolute top-10 left-10 font-orbitron">
+                    <div class="bg-red-950/80 text-red-400 border border-red-600/50 px-3 py-1 text-xs font-bold rounded flex items-center w-fit">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-ping"></span>
+                        LOCATION: EXTREME FRONT LINE BORDER ZONE
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1 font-mono">TEMP: -18°C | WIND: 45 MPH | THREAT LEVEL: CRITICAL</div>
+                </div>
+            </div>
 
-    function drawGlobe() {
-      ctx.clearRect(0, 0, width, height);
+            <!-- Lower Third Banner Overlay for Field Reporter -->
+            <div class="absolute bottom-16 left-6 md:left-12 z-20 max-w-xl">
+                <div class="bg-slate-900/95 border-l-8 border-amber-500 px-5 py-3 shadow-2xl rounded-r-lg glass-panel border border-amber-500/20">
+                    <div class="text-xs font-bold text-amber-400 font-orbitron tracking-widest uppercase">LIVE FIELD REPORT</div>
+                    <div class="text-xl md:text-3xl font-extrabold text-white tracking-wide">AWAITING EXPLOSIVE SHOWDOWN</div>
+                    <div class="text-sm text-slate-300 mt-1">Reporter: Standing by on rumored frontlines of battle</div>
+                </div>
+            </div>
+        </div>
 
-      // Outer Atmosphere Glow
-      const glow = ctx.createRadialGradient(
-        width / 2, height / 2, globeRadius * 0.95,
-        width / 2, height / 2, globeRadius * 1.15
-      );
-      glow.addColorStop(0, 'rgba(56, 189, 248, 0.3)');
-      glow.addColorStop(1, 'rgba(56, 189, 248, 0)');
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, globeRadius * 1.15, 0, Math.PI * 2);
-      ctx.fill();
+        <!-- VIEW 3: HISTORIAN BREAKDOWN / INFOGRAPHIC BOARD -->
+        <div id="viewHistorian" class="absolute inset-0 flex flex-col justify-between transition-opacity duration-700 opacity-0 pointer-events-none p-6 md:p-12">
+            <!-- Dark Interactive Briefing Room Background -->
+            <div class="absolute inset-0 bg-slate-950 flex items-center justify-center">
+                <div class="absolute inset-0 bg-grid-white/[0.03] bg-[size:30px_30px]"></div>
+            </div>
 
-      // Globe Base Sphere
-      const sphereBg = ctx.createRadialGradient(
-        width / 2 - globeRadius * 0.3, height / 2 - globeRadius * 0.3, 10,
-        width / 2, height / 2, globeRadius
-      );
-      sphereBg.addColorStop(0, '#1e293b');
-      sphereBg.addColorStop(1, '#0f172a');
-      ctx.fillStyle = sphereBg;
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, globeRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+            <!-- Infographic Slide Board Container -->
+            <div class="relative z-10 w-full h-full max-w-5xl mx-auto flex flex-col justify-between glass-panel p-6 md:p-8 rounded-2xl border border-sky-500/30">
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-2xl md:text-4xl font-extrabold font-orbitron text-sky-400">HISTORICAL ANALYSIS</h2>
+                        <p class="text-sm text-slate-400">Key Pillars of the Cold War Conflict (1947 - 1991)</p>
+                    </div>
+                    <div class="bg-sky-950 border border-sky-500 text-sky-300 font-orbitron text-xs px-3 py-1.5 rounded">
+                        ANALYST BRIEFING
+                    </div>
+                </div>
 
-      // Latitude & Longitude Grid Lines
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
-      ctx.lineWidth = 1;
-      for (let lat = -60; lat <= 60; lat += 30) {
-        ctx.beginPath();
-        let first = true;
-        for (let lon = 0; lon <= 360; lon += 10) {
-          const pt = project(lat, lon);
-          if (pt.visible) {
-            if (first) { ctx.moveTo(pt.px, pt.py); first = false; }
-            else { ctx.lineTo(pt.px, pt.py); }
-          } else { first = true; }
+                <!-- 4 Key Pillars Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-auto py-4">
+                    <!-- Pillar 1 -->
+                    <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl hover:border-sky-400 transition">
+                        <div class="flex items-center text-sky-400 font-bold text-lg font-orbitron mb-1">
+                            <i class="fa-solid fa-person-rifle mr-3 text-red-500"></i> 1. Proxy Wars
+                        </div>
+                        <p class="text-xs md:text-sm text-slate-300">No direct fight between superpowers. Fought indirectly in Korea, Vietnam, and Afghanistan.</p>
+                    </div>
+                    <!-- Pillar 2 -->
+                    <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl hover:border-sky-400 transition">
+                        <div class="flex items-center text-sky-400 font-bold text-lg font-orbitron mb-1">
+                            <i class="fa-solid fa-scale-balanced mr-3 text-amber-400"></i> 2. Ideology & Competition
+                        </div>
+                        <p class="text-xs md:text-sm text-slate-300">Capitalism & Democracy (USA) vs. Communism & State Control (USSR).</p>
+                    </div>
+                    <!-- Pillar 3 -->
+                    <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl hover:border-sky-400 transition">
+                        <div class="flex items-center text-sky-400 font-bold text-lg font-orbitron mb-1">
+                            <i class="fa-solid fa-rocket mr-3 text-emerald-400"></i> 3. Arms & Space Race
+                        </div>
+                        <p class="text-xs md:text-sm text-slate-300">Nuclear stockpiling (M.A.D. - Mutually Assured Destruction) and competing to land on the Moon.</p>
+                    </div>
+                    <!-- Pillar 4 -->
+                    <div class="bg-slate-900/80 border border-slate-700 p-4 rounded-xl hover:border-sky-400 transition">
+                        <div class="flex items-center text-sky-400 font-bold text-lg font-orbitron mb-1">
+                            <i class="fa-solid fa-user-secret mr-3 text-purple-400"></i> 4. Espionage & Propaganda
+                        </div>
+                        <p class="text-xs md:text-sm text-slate-300">CIA vs. KGB secret operations, media influence, and political posturing.</p>
+                    </div>
+                </div>
+
+                <!-- Footer Summary Banner -->
+                <div class="bg-sky-950/60 border border-sky-500/30 p-3 rounded-xl text-center">
+                    <span class="font-orbitron font-bold text-sky-300 text-sm">SUMMARY DEFINITION: </span>
+                    <span class="text-xs md:text-sm text-slate-200">The war was called "Cold" because political relations were <b>FROZEN</b>—not because of arctic weather or exploding battlefields!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COUNTDOWN DISPLAY OVERLAY WIDGET -->
+        <div id="countdownWidget" class="absolute z-40 flex flex-col items-center justify-center bg-slate-950/95 border-2 border-red-600 px-10 py-6 rounded-3xl shadow-2xl glass-panel hidden">
+            <div class="text-xs font-orbitron text-red-400 font-bold tracking-widest uppercase mb-2">IMMINENT EVENT COUNTDOWN</div>
+            <div id="countdownNumber" class="text-7xl md:text-9xl font-black font-orbitron text-red-500 animate-pulse">5</div>
+            <div class="text-xs text-slate-400 mt-2 font-mono">EXPECTED DETONATION TIME</div>
+        </div>
+    </main>
+
+    <!-- BOTTOM TICKER & CONTROL PANEL -->
+    <footer class="z-30 bg-slate-950 border-t border-slate-800 flex flex-col">
+        
+        <!-- Live Scrolling Ticker Banner -->
+        <div class="bg-red-700 text-white font-mono text-xs md:text-sm py-1.5 overflow-hidden flex items-center relative border-b border-red-800">
+            <div class="bg-red-900 text-white font-orbitron font-bold px-3 py-1 text-xs uppercase tracking-wider absolute left-0 z-10 shadow-md">
+                BREAKING NEWS
+            </div>
+            <div class="w-full pl-36">
+                <div class="animate-ticker">
+                    🚨 COLD WAR TENSIONS ESCALATE • USA VS USSR RIVALRY GROWS • NUCLEAR ARMS RACE REACHES PEAK • PROXY WARS REPORTED IN KOREA & VIETNAM • MUTUALLY ASSURED DESTRUCTION (M.A.D.) KEEPS DIRECT COMBAT AT BAY • BERLIN WALL ERECTED • SPACE RACE IN FULL EFFECT 🚨
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE DIRECTORS CONTROL BAR (INTERACTIVE BUTTONS FOR THE PRESENTATION) -->
+        <div class="bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800 text-xs">
+            
+            <!-- View Selector Switcher -->
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-orbitron font-bold text-[11px] hidden sm:inline">VIEWS:</span>
+                <button onclick="switchView('studio')" id="btnViewStudio" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 rounded transition flex items-center">
+                    <i class="fa-solid fa-tv mr-1.5"></i> 1. Studio Anchor
+                </button>
+                <button onclick="switchView('field')" id="btnViewField" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded transition flex items-center">
+                    <i class="fa-solid fa-icicles mr-1.5"></i> 2. Field Report
+                </button>
+                <button onclick="switchView('historian')" id="btnViewHistorian" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded transition flex items-center">
+                    <i class="fa-solid fa-chalkboard-user mr-1.5"></i> 3. Historian Board
+                </button>
+            </div>
+
+            <!-- Sound FX & Triggers -->
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-orbitron font-bold text-[11px] hidden sm:inline">TRIGGERS:</span>
+                <button onclick="triggerCountdown()" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded transition shadow-lg flex items-center animate-pulse">
+                    <i class="fa-solid fa-stopwatch mr-1.5"></i> Countdown (5s)
+                </button>
+                <button onclick="playSFX('newsJingle')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 px-2.5 py-1.5 rounded border border-slate-700">
+                    <i class="fa-solid fa-music mr-1"></i> News Intro
+                </button>
+                <button onclick="playSFX('alertSting')" class="bg-slate-800 hover:bg-slate-700 text-red-400 px-2.5 py-1.5 rounded border border-slate-700">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Alert Sound
+                </button>
+                <button onclick="playSFX('crickets')" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-2.5 py-1.5 rounded border border-slate-700">
+                    <i class="fa-solid fa-bug mr-1"></i> Silence/Cricket
+                </button>
+                <button onclick="toggleAlertOverlay()" class="bg-red-950 hover:bg-red-900 text-red-300 px-2.5 py-1.5 rounded border border-red-700">
+                    <i class="fa-solid fa-lightbulb mr-1"></i> Red Flash (R)
+                </button>
+            </div>
+            
+            <!-- Quick Hotkey Guide -->
+            <div class="text-[10px] text-slate-400 hidden lg:block font-mono bg-slate-950 px-2.5 py-1 rounded border border-slate-800">
+                Hotkeys: <span class="text-sky-400 font-bold">1</span> Studio | <span class="text-sky-400 font-bold">2</span> Field | <span class="text-sky-400 font-bold">3</span> Historian | <span class="text-red-400 font-bold">C</span> Countdown | <span class="text-red-400 font-bold">R</span> Red Alert | <span class="text-sky-400 font-bold">F</span> Fullscreen
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC, 3D TILTED GLOBE ENGINE, VIEWS SWITCHING, AUDIO SYNTHESIS & HOTKEYS -->
+    <script>
+        // --- 1. CLOCK LOGIC ---
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toUTCString().split(' ')[4] + ' UTC';
+            document.getElementById('liveClock').textContent = timeString;
         }
-        ctx.stroke();
-      }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-      // Render Continents
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-      continents.forEach(poly => {
-        ctx.beginPath();
-        let first = true;
-        let allVisible = true;
-        poly.forEach(coord => {
-          const pt = project(coord[0], coord[1]);
-          if (!pt.visible) allVisible = false;
-          if (first) { ctx.moveTo(pt.px, pt.py); first = false; }
-          else { ctx.lineTo(pt.px, pt.py); }
+        // --- 2. 3D TILTED & LEFT-ALIGNED ROTATING GLOBE RENDERER ---
+        const canvas = document.getElementById('globeCanvas');
+        const ctx = canvas.getContext('2d');
+        let globeAngle = 0;
+        let points = [];
+
+        // Realistic Earth Axial Tilt: ~23.5 degrees converted to radians
+        const AXIAL_TILT = 23.5 * (Math.PI / 180);
+        const cosTilt = Math.cos(AXIAL_TILT);
+        const sinTilt = Math.sin(AXIAL_TILT);
+
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            generateGlobePoints();
+        }
+
+        function generateGlobePoints() {
+            points = [];
+            // Dynamic Radius based on viewport dimensions
+            const radius = Math.min(canvas.width, canvas.height) * 0.30;
+            const numLat = 18; // Latitude rings
+            const numLon = 26; // Longitude rings
+
+            // Create 3D spherical grid points
+            for (let i = 0; i <= numLat; i++) {
+                const lat = (Math.PI / numLat) * i - Math.PI / 2;
+                for (let j = 0; j < numLon; j++) {
+                    const lon = (Math.PI * 2 / numLon) * j;
+                    const x = radius * Math.cos(lat) * Math.cos(lon);
+                    const y = radius * Math.sin(lat);
+                    const z = radius * Math.cos(lat) * Math.sin(lon);
+                    points.push({ x, y, z, lat, lon });
+                }
+            }
+        }
+
+        function drawGlobe() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Shift Globe Center strictly to the LEFT SIDE (28% of width on wider screens, centered on mobile)
+            const centerX = canvas.width > 768 ? canvas.width * 0.28 : canvas.width * 0.35;
+            const centerY = canvas.height / 2;
+            
+            globeAngle += 0.006; // Rotation speed
+
+            const cosA = Math.cos(globeAngle);
+            const sinA = Math.sin(globeAngle);
+
+            // Draw Outer Atmosphere Glow Ring (Aligned to Left Globe Center)
+            const radius = Math.min(canvas.width, canvas.height) * 0.30;
+            const glowGrad = ctx.createRadialGradient(centerX, centerY, radius * 0.75, centerX, centerY, radius * 1.15);
+            glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.05)');
+            glowGrad.addColorStop(0.8, 'rgba(56, 189, 248, 0.22)');
+            glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 1.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Project and render 3D points with 23.5-degree Axial Tilt
+            const projected = points.map(p => {
+                // 1. Rotation around Y-axis (Spin)
+                const rx1 = p.x * cosA - p.z * sinA;
+                const rz1 = p.x * sinA + p.z * cosA;
+                const ry1 = p.y;
+
+                // 2. Apply 23.5° Axial Tilt (Rotation around Z-axis)
+                const rx = rx1 * cosTilt - ry1 * sinTilt;
+                const ry = rx1 * sinTilt + ry1 * cosTilt;
+                const rz = rz1;
+
+                // Perspective projection calculation
+                const scale = 600 / (600 + rz);
+                const px = rx * scale + centerX;
+                const py = ry * scale + centerY;
+
+                return { px, py, rz, scale };
+            });
+
+            // Draw Longitude and Latitude Connecting Lines
+            ctx.lineWidth = 1;
+            const numLon = 26;
+
+            for (let i = 0; i < projected.length; i++) {
+                const pt = projected[i];
+                // Only draw front-facing elements with higher opacity
+                if (pt.rz > -60) {
+                    const alpha = Math.max(0.05, (pt.rz + radius) / (2 * radius));
+                    ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.9})`;
+                    ctx.beginPath();
+                    ctx.arc(pt.px, pt.py, 1.8 * pt.scale, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Connect horizontally to next longitude point
+                    if ((i + 1) % numLon !== 0) {
+                        const nextPt = projected[i + 1];
+                        if (nextPt.rz > -60) {
+                            ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.4})`;
+                            ctx.beginPath();
+                            ctx.moveTo(pt.px, pt.py);
+                            ctx.lineTo(nextPt.px, nextPt.py);
+                            ctx.stroke();
+                        }
+                    }
+
+                    // Connect vertically to next latitude ring point
+                    if (i + numLon < projected.length) {
+                        const nextLatPt = projected[i + numLon];
+                        if (nextLatPt.rz > -60) {
+                            ctx.strokeStyle = `rgba(37, 99, 235, ${alpha * 0.35})`;
+                            ctx.beginPath();
+                            ctx.moveTo(pt.px, pt.py);
+                            ctx.lineTo(nextLatPt.px, nextLatPt.py);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            requestAnimationFrame(drawGlobe);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        requestAnimationFrame(drawGlobe);
+
+        // --- 3. SWITCHABLE VIEWS SYSTEM ---
+        function switchView(viewName) {
+            const studioView = document.getElementById('viewStudio');
+            const fieldView = document.getElementById('viewField');
+            const historianView = document.getElementById('viewHistorian');
+            
+            const btnStudio = document.getElementById('btnViewStudio');
+            const btnField = document.getElementById('btnViewField');
+            const btnHistorian = document.getElementById('btnViewHistorian');
+            const headerTitle = document.getElementById('viewTitleHeader');
+
+            // Reset view classes
+            [studioView, fieldView, historianView].forEach(v => {
+                v.classList.add('opacity-0', 'pointer-events-none');
+                v.classList.remove('opacity-100');
+            });
+            
+            [btnStudio, btnField, btnHistorian].forEach(b => {
+                b.className = "bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-1.5 rounded transition flex items-center";
+            });
+
+            if (viewName === 'studio') {
+                studioView.classList.remove('opacity-0', 'pointer-events-none');
+                studioView.classList.add('opacity-100');
+                btnStudio.className = "bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 rounded transition flex items-center";
+                headerTitle.textContent = "STUDIO MAIN DESK • SPECIAL COVERAGE";
+            } else if (viewName === 'field') {
+                fieldView.classList.remove('opacity-0', 'pointer-events-none');
+                fieldView.classList.add('opacity-100');
+                btnField.className = "bg-amber-600 hover:bg-amber-500 text-white font-semibold px-3 py-1.5 rounded transition flex items-center";
+                headerTitle.textContent = "LIVE FIELD REPORT • FRONT LINE ZONE";
+                createSnow();
+            } else if (viewName === 'historian') {
+                historianView.classList.remove('opacity-0', 'pointer-events-none');
+                historianView.classList.add('opacity-100');
+                btnHistorian.className = "bg-sky-600 hover:bg-sky-500 text-white font-semibold px-3 py-1.5 rounded transition flex items-center";
+                headerTitle.textContent = "HISTORICAL ANALYSIS BRIEFING BOARD";
+            }
+        }
+
+        // --- 4. SNOW GENERATOR FOR FIELD VIEW ---
+        let snowGenerated = false;
+        function createSnow() {
+            if (snowGenerated) return;
+            snowGenerated = true;
+            const container = document.getElementById('snowContainer');
+            for (let i = 0; i < 40; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.innerHTML = '❄';
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+                flake.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(flake);
+            }
+        }
+
+        // --- 5. COUNTDOWN WIDGET LOGIC ---
+        let isCountingDown = false;
+        function triggerCountdown() {
+            if (isCountingDown) return;
+            isCountingDown = true;
+
+            switchView('field');
+            
+            const widget = document.getElementById('countdownWidget');
+            const numDisplay = document.getElementById('countdownNumber');
+            widget.classList.remove('hidden');
+
+            let count = 5;
+            numDisplay.textContent = count;
+            playBeep(600, 0.15);
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    numDisplay.textContent = count;
+                    playBeep(600, 0.15);
+                } else if (count === 0) {
+                    numDisplay.textContent = "BOOM?";
+                    playBeep(300, 0.4);
+                } else {
+                    clearInterval(timer);
+                    widget.classList.add('hidden');
+                    isCountingDown = false;
+                    setTimeout(() => playSFX('crickets'), 500);
+                }
+            }, 1000);
+        }
+
+        // --- 6. RED FLASH ALERT TOGGLE ---
+        function toggleAlertOverlay() {
+            const alertBox = document.getElementById('alertOverlay');
+            if (alertBox.classList.contains('hidden')) {
+                alertBox.classList.remove('hidden');
+                alertBox.classList.add('animate-alert-flash');
+                playSFX('alertSting');
+            } else {
+                alertBox.classList.add('hidden');
+                alertBox.classList.remove('animate-alert-flash');
+            }
+        }
+
+        // --- 7. SYNTHESIZED WEB AUDIO SOUND GENERATOR ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(freq, duration) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playSFX(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (type === 'newsJingle') {
+                const notes = [440, 554, 659, 880];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => playBeep(freq, 0.2), idx * 150);
+                });
+            } else if (type === 'alertSting') {
+                playBeep(800, 0.2);
+                setTimeout(() => playBeep(400, 0.4), 150);
+            } else if (type === 'crickets') {
+                playBeep(2000, 0.05);
+                setTimeout(() => playBeep(2200, 0.05), 80);
+                setTimeout(() => playBeep(2000, 0.05), 250);
+            }
+        }
+
+        // --- 8. FULLSCREEN SYSTEM WITH FALLBACK MESSAGING ---
+        function toggleFullscreen() {
+            const btnText = document.getElementById('fsBtnText');
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const docEl = document.documentElement;
+                const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+                
+                if (requestFS) {
+                    requestFS.call(docEl).then(() => {
+                        btnText.textContent = "Exit Fullscreen";
+                    }).catch(() => {
+                        alertFullscreenInstructions();
+                    });
+                } else {
+                    alertFullscreenInstructions();
+                }
+            } else {
+                const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (exitFS) {
+                    exitFS.call(document);
+                    btnText.textContent = "Fullscreen";
+                }
+            }
+        }
+
+        function alertFullscreenInstructions() {
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const keyText = isMac ? "Cmd + Control + F" : "F11";
+            
+            const overlay = document.getElementById('alertOverlay');
+            overlay.classList.remove('hidden');
+            overlay.innerHTML = `
+                <div class="bg-slate-900 border-2 border-sky-500 text-white font-orbitron text-xl md:text-3xl px-8 py-6 rounded-2xl shadow-2xl text-center pointer-events-auto">
+                    <div class="text-sky-400 font-bold mb-2">FULLSCREEN HOTKEY</div>
+                    <div class="text-slate-300 text-sm font-sans mb-4">Browser blocked automatic fullscreen request.</div>
+                    <div class="bg-sky-950 border border-sky-500/50 py-3 px-6 rounded-lg text-amber-400 font-mono text-2xl">
+                        Press ${keyText}
+                    </div>
+                    <button onclick="document.getElementById('alertOverlay').classList.add('hidden'); location.reload();" class="mt-4 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 px-4 py-2 rounded">Dismiss</button>
+                </div>
+            `;
+        }
+
+        document.addEventListener('fullscreenchange', updateFSButtonText);
+        document.addEventListener('webkitfullscreenchange', updateFSButtonText);
+        function updateFSButtonText() {
+            const btnText = document.getElementById('fsBtnText');
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                btnText.textContent = "Exit Fullscreen";
+            } else {
+                btnText.textContent = "Fullscreen";
+            }
+        }
+
+        // --- 9. KEYBOARD HOTKEYS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '1') switchView('studio');
+            if (e.key === '2') switchView('field');
+            if (e.key === '3') switchView('historian');
+            if (e.key === 'c' || e.key === 'C') triggerCountdown();
+            if (e.key === 'r' || e.key === 'R') toggleAlertOverlay();
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+            if (e.key === ' ') {
+                e.preventDefault();
+                playSFX('newsJingle');
+            }
         });
-        ctx.closePath();
-        if (allVisible) {
-          ctx.fill();
-          ctx.stroke();
-        }
-      });
-
-      rotationAngle += 0.3; // Rotate speed
-      requestAnimationFrame(drawGlobe);
-    }
-    drawGlobe();
-
-
-    /* -------------------------------------------------------------
-       2. INTERACTIVE CONTROLS & AUDIO SYNTHESIS
-    ------------------------------------------------------------- */
-    function switchView(viewNum) {
-      document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-      document.getElementById(`view${viewNum}`).classList.add('active');
-      
-      const btns = document.querySelectorAll('.control-dock .btn');
-      btns[0].classList.toggle('active', viewNum === 1);
-      btns[1].classList.toggle('active', viewNum === 2);
-      btns[2].classList.toggle('active', viewNum === 3);
-    }
-
-    function toggleAlert() {
-      document.getElementById('alertFlash').classList.toggle('active');
-    }
-
-    // Web Audio API Sound Effects (Beeps & Cricket)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function playBeep(freq = 600, duration = 0.15) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
-
-    function playCricketChirp() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      for (let i = 0; i < 3; i++) {
-        setTimeout(() => playBeep(4500, 0.05), i * 80);
-      }
-    }
-
-    // Countdown Logic (Press C)
-    let counting = false;
-    function triggerCountdown() {
-      if (counting) return;
-      counting = true;
-      const modal = document.getElementById('countdownModal');
-      const numElem = document.getElementById('countNum');
-      const textElem = document.getElementById('countText');
-      
-      modal.classList.add('active');
-      let count = 5;
-      numElem.textContent = count;
-      textElem.textContent = "COUNTDOWN TO BOMB...";
-      playBeep(800, 0.2);
-
-      const timer = setInterval(() => {
-        count--;
-        if (count > 0) {
-          numElem.textContent = count;
-          playBeep(800, 0.2);
-        } else {
-          clearInterval(timer);
-          numElem.textContent = "0";
-          textElem.textContent = "🦗 SILENCE... NO EXPLOSION!";
-          playCricketChirp();
-
-          setTimeout(() => {
-            modal.classList.remove('active');
-            counting = false;
-          }, 3500);
-        }
-      }, 1000);
-    }
-
-    // Fullscreen Toggle
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          alert("To activate Fullscreen, press F11 on your keyboard!");
-        });
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    }
-
-    // Keyboard Hotkeys (1, 2, 3, C, R, F)
-    window.addEventListener('keydown', (e) => {
-      if (e.key === '1') switchView(1);
-      if (e.key === '2') switchView(2);
-      if (e.key === '3') switchView(3);
-      if (e.key.toLowerCase() === 'c') triggerCountdown();
-      if (e.key.toLowerCase() === 'r') toggleAlert();
-      if (e.key.toLowerCase() === 'f') toggleFullscreen();
-    });
-  </script>
+    </script>
 </body>
 </html>
